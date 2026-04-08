@@ -12,38 +12,29 @@ pipeline {
     disableConcurrentBuilds()
     timestamps()
   }
-
-  environment {
-    CARGO_INCREMENTAL = '0'
-    RUSTFLAGS = '-C debuginfo=none'
-  }
-
-  post {
-    always {
-      node('freebsd') {
-        ircNotify targets: '#buoyantdata'
-      }
-    }
-  }
   stages {
     stage('Rust') {
       failFast true
 
       parallel {
         stage('Lint') {
-          agent {
-            label "freebsd && rust"
-          }
+          agent { label 'rust' }
 
           steps {
-            sh 'cargo clean && cargo clippy'
+            sh 'cargo clippy'
+          }
+        }
+
+        stage('Build') {
+          agent { label 'rust' }
+
+          steps {
+            sh 'cargo build'
           }
         }
 
         stage('Test') {
-          agent {
-            label "freebsd && rust"
-          }
+          agent { label 'rust' }
 
           options {
             // This should help with flakey tests, like concurrency_local
