@@ -12,6 +12,13 @@ pipeline {
     disableConcurrentBuilds()
     timestamps()
   }
+
+  post {
+    always {
+      sh 'cargo clean'
+    }
+  }
+
   stages {
     stage('Rust') {
       failFast true
@@ -43,6 +50,27 @@ pipeline {
 
           steps {
             sh 'cargo test'
+          }
+        }
+      }
+    }
+    stage('Integration') {
+      failFast true
+      parallel {
+        stage('delta-rs') {
+          agent { label 'rust' }
+          steps {
+            withCredentials([gitUsernamePassword(credentialsId: 'gitea-token', gitToolName: 'Default')]) {
+              sh './ci/integration-delta-rs.sh'
+            }
+          }
+        }
+        stage('deltalake Python') {
+          agent { label 'rust && linux' }
+          steps {
+            withCredentials([gitUsernamePassword(credentialsId: 'gitea-token', gitToolName: 'Default')]) {
+              sh './ci/integration-delta-rs.sh python'
+            }
           }
         }
       }
