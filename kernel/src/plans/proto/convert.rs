@@ -540,6 +540,10 @@ impl From<&Scalar> for proto_expr::Scalar {
             Scalar::Boolean(v) => Value::Boolean(*v),
             Scalar::Timestamp(v) => Value::Timestamp(*v),
             Scalar::TimestampNtz(v) => Value::TimestampNtz(*v),
+            #[cfg(feature = "nanosecond-timestamps")]
+            Scalar::TimestampNanos(v) => Value::TimestampNanos(*v),
+            #[cfg(feature = "nanosecond-timestamps")]
+            Scalar::TimestampNanosNtz(v) => Value::TimestampNanosNtz(*v),
             Scalar::Date(v) => Value::Date(*v),
             Scalar::Binary(v) => Value::Binary(v.clone()),
             Scalar::Decimal(decimal) => Value::Decimal(decimal.into()),
@@ -615,26 +619,26 @@ impl From<&DataType> for proto_schema::DataType {
 impl From<&PrimitiveType> for proto_schema::PrimitiveType {
     fn from(primitive: &PrimitiveType) -> Self {
         let kind = match primitive {
-            PrimitiveType::String => PrimitiveTypeKind::Simple(Simple::String as i32),
-            PrimitiveType::Long => PrimitiveTypeKind::Simple(Simple::Long as i32),
-            PrimitiveType::Integer => PrimitiveTypeKind::Simple(Simple::Integer as i32),
-            PrimitiveType::Short => PrimitiveTypeKind::Simple(Simple::Short as i32),
-            PrimitiveType::Byte => PrimitiveTypeKind::Simple(Simple::Byte as i32),
-            PrimitiveType::Float => PrimitiveTypeKind::Simple(Simple::Float as i32),
-            PrimitiveType::Double => PrimitiveTypeKind::Simple(Simple::Double as i32),
-            PrimitiveType::Boolean => PrimitiveTypeKind::Simple(Simple::Boolean as i32),
-            PrimitiveType::Binary => PrimitiveTypeKind::Simple(Simple::Binary as i32),
-            PrimitiveType::Date => PrimitiveTypeKind::Simple(Simple::Date as i32),
-            PrimitiveType::Timestamp => PrimitiveTypeKind::Simple(Simple::Timestamp as i32),
-            PrimitiveType::TimestampNtz => PrimitiveTypeKind::Simple(Simple::TimestampNtz as i32),
-            PrimitiveType::Decimal(decimal) => PrimitiveTypeKind::Decimal((*decimal).into()),
-            PrimitiveType::Void => PrimitiveTypeKind::Simple(Simple::Void as i32),
-            PrimitiveType::IntervalYearMonth => {
-                PrimitiveTypeKind::Simple(Simple::IntervalYearMonth as i32)
-            }
-            PrimitiveType::IntervalDayTime => {
-                PrimitiveTypeKind::Simple(Simple::IntervalDayTime as i32)
-            }
+            PrimitiveType::String => Kind::Simple(Simple::String as i32),
+            PrimitiveType::Long => Kind::Simple(Simple::Long as i32),
+            PrimitiveType::Integer => Kind::Simple(Simple::Integer as i32),
+            PrimitiveType::Short => Kind::Simple(Simple::Short as i32),
+            PrimitiveType::Byte => Kind::Simple(Simple::Byte as i32),
+            PrimitiveType::Float => Kind::Simple(Simple::Float as i32),
+            PrimitiveType::Double => Kind::Simple(Simple::Double as i32),
+            PrimitiveType::Boolean => Kind::Simple(Simple::Boolean as i32),
+            PrimitiveType::Binary => Kind::Simple(Simple::Binary as i32),
+            PrimitiveType::Date => Kind::Simple(Simple::Date as i32),
+            PrimitiveType::Timestamp => Kind::Simple(Simple::Timestamp as i32),
+            PrimitiveType::TimestampNtz => Kind::Simple(Simple::TimestampNtz as i32),
+            #[cfg(feature = "nanosecond-timestamps")]
+            PrimitiveType::TimestampNanos => Kind::Simple(Simple::TimestampNanos as i32),
+            #[cfg(feature = "nanosecond-timestamps")]
+            PrimitiveType::TimestampNanosNtz => Kind::Simple(Simple::TimestampNanosNtz as i32),
+            PrimitiveType::Decimal(decimal) => Kind::Decimal((*decimal).into()),
+            PrimitiveType::Void => Kind::Simple(Simple::Void as i32),
+            PrimitiveType::IntervalYearMonth => Kind::Simple(Simple::IntervalYearMonth as i32),
+            PrimitiveType::IntervalDayTime => Kind::Simple(Simple::IntervalDayTime as i32),
         };
         proto_schema::PrimitiveType { kind: Some(kind) }
     }
@@ -1778,6 +1782,8 @@ mod tests {
             Value::Boolean(_) => "boolean",
             Value::Timestamp(_) => "timestamp",
             Value::TimestampNtz(_) => "timestamp_ntz",
+            Value::TimestampNanos(_) => "timestamp_nanos",
+            Value::TimestampNanosNtz(_) => "timestamp_nanos_ntz",
             Value::Date(_) => "date",
             Value::Binary(_) => "binary",
             Value::Decimal(_) => "decimal",

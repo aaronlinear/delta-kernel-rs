@@ -368,6 +368,15 @@ impl TryFromKernel<&DataType> for ArrowDataType {
                     PrimitiveType::TimestampNtz => {
                         Ok(ArrowDataType::Timestamp(TimeUnit::Microsecond, None))
                     }
+                    #[cfg(feature = "nanosecond-timestamps")]
+                    PrimitiveType::TimestampNanos => Ok(ArrowDataType::Timestamp(
+                        TimeUnit::Nanosecond,
+                        Some("UTC".into()),
+                    )),
+                    #[cfg(feature = "nanosecond-timestamps")]
+                    PrimitiveType::TimestampNanosNtz => {
+                        Ok(ArrowDataType::Timestamp(TimeUnit::Nanosecond, None))
+                    }
                     PrimitiveType::Void => Ok(ArrowDataType::Null),
                     PrimitiveType::IntervalYearMonth | PrimitiveType::IntervalDayTime => {
                         Err(ArrowError::SchemaError(format!(
@@ -585,17 +594,31 @@ impl TryFromArrow<&ArrowDataType> for DataType {
             {
                 Ok(DataType::TIMESTAMP)
             }
-            ArrowDataType::Timestamp(TimeUnit::Nanosecond, None) => Ok(DataType::TIMESTAMP_NTZ),
+            #[cfg(feature = "nanosecond-timestamps")]
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, None) => {
+                Ok(DataType::TIMESTAMP_NANOS_NTZ)
+            }
+            #[cfg(feature = "nanosecond-timestamps")]
             ArrowDataType::Timestamp(TimeUnit::Nanosecond, Some(tz))
                 if tz.eq_ignore_ascii_case("utc") =>
             {
-                Ok(DataType::TIMESTAMP)
+                Ok(DataType::TIMESTAMP_NANOS)
             }
             // Millisecond is coarser than the kernel's microsecond logical timestamp, so
             // mapping it onto the logical type is a lossless upscale (values are rescaled
             // x1000 by the engine on read).
             ArrowDataType::Timestamp(TimeUnit::Millisecond, None) => Ok(DataType::TIMESTAMP_NTZ),
             ArrowDataType::Timestamp(TimeUnit::Millisecond, Some(tz))
+                if tz.eq_ignore_ascii_case("utc") =>
+            {
+                Ok(DataType::TIMESTAMP)
+            }
+            // Fall back to converting nanosecond timestamps to microsecond when the
+            // nanosecond-timestamp feature is not enabled.
+            #[cfg(not(feature = "nanosecond-timestamps"))]
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, None) => Ok(DataType::TIMESTAMP_NTZ),
+            #[cfg(not(feature = "nanosecond-timestamps"))]
+            ArrowDataType::Timestamp(TimeUnit::Nanosecond, Some(tz))
                 if tz.eq_ignore_ascii_case("utc") =>
             {
                 Ok(DataType::TIMESTAMP)

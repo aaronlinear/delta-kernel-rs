@@ -24,6 +24,8 @@ use crate::schema::{
     StructType,
 };
 use crate::table_configuration::TableConfiguration;
+#[cfg(feature = "nanosecond-timestamps")]
+use crate::table_features::schema_contains_timestamp_nanos;
 use crate::table_features::{
     add_feature_to_lists, assign_column_mapping_metadata, auto_enable_property_driven_features,
     find_max_column_id_in_schema, get_any_level_column_physical_name,
@@ -408,8 +410,28 @@ fn maybe_enable_invariants(schema: &SchemaRef, validated: &mut ValidatedTablePro
     }
 }
 
-/// Auto-enables allowed property-driven features from the table properties (see
-/// [`auto_enable_property_driven_features`]).
+#[cfg(feature = "nanosecond-timestamps")]
+/// Conditionally adds the `timestampNanos` and `timestampNtz` features to the protocol when the
+/// schema contains TimestampNanos columns anywhere in the schema tree (top-level, nested structs,
+/// arrays, maps).
+fn maybe_enable_timestamp_nanos(schema: &SchemaRef, validated: &mut ValidatedTableProperties) {
+    if schema_contains_timestamp_nanos(schema) {
+        add_feature_to_lists(
+            TableFeature::TimestampNanos,
+            &mut validated.reader_features,
+            &mut validated.writer_features,
+        );
+        add_feature_to_lists(
+            TableFeature::TimestampWithoutTimezone,
+            &mut validated.reader_features,
+            &mut validated.writer_features,
+        );
+    }
+}
+
+/// Auto-enables allowed features whose [`EnablementCheck::EnabledIf`] check is satisfied by the
+/// table properties. Features with [`EnablementCheck::AlwaysIfSupported`] are skipped since they
+/// don't require property-driven enablement.
 fn maybe_auto_enable_property_driven_features(validated: &mut ValidatedTableProperties) {
     let table_properties = TableProperties::from(validated.properties.iter());
     auto_enable_property_driven_features(
@@ -913,6 +935,10 @@ impl CreateTableTransactionBuilder {
         maybe_enable_variant_type(&effective_schema, &mut validated);
         maybe_enable_timestamp_ntz(&effective_schema, &mut validated);
         maybe_enable_invariants(&effective_schema, &mut validated);
+
+        // Auto-enable timestampNanos feature if schema contains TimestampNanos columns
+        #[cfg(feature = "nanosecond-timestamps")]
+        maybe_enable_timestamp_nanos(&effective_schema, &mut validated);
 
         // Property-driven auto-enablement: check enablement properties
         maybe_auto_enable_property_driven_features(&mut validated);
