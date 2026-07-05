@@ -146,6 +146,7 @@ impl ParallelState {
     ///
     /// ```no_run
     /// # use std::sync::Arc;
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::scan::ParallelState;
     /// # use tracing::instrument;
     /// #[instrument(skip_all, name = "parallel_scan")]

@@ -40,6 +40,7 @@ pub type PredicateRef = std::sync::Arc<Predicate>;
 /// types [`Scalar`] does (`i32`, `i64`, `&str`, `bool`, ...).
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// use delta_kernel::expressions::lit;
 /// let _zero = lit(0i64);
 /// ```

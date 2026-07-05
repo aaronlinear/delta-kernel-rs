@@ -7,6 +7,7 @@
 
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::schema::{
     schema_ref, ArrayType, ColumnMetadataKey, DataType, MapType, MetadataValue, StructField,

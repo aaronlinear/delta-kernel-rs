@@ -47,6 +47,7 @@ pub fn insert_url_handler(
 ///
 /// ```rust
 /// # use url::Url;
+/// # use buoyant_kernel_engine as delta_kernel_default_engine;
 /// # use delta_kernel_default_engine::storage::store_from_url;
 /// # use delta_kernel::DeltaResult;
 /// # fn example() -> DeltaResult<()> {
@@ -71,6 +72,7 @@ pub fn store_from_url(url: &Url) -> delta_kernel::DeltaResult<Arc<dyn ObjectStor
 /// ```rust
 /// # use url::Url;
 /// # use std::collections::HashMap;
+/// # use buoyant_kernel_engine as delta_kernel_default_engine;
 /// # use delta_kernel_default_engine::storage::store_from_url_opts;
 /// # use delta_kernel::DeltaResult;
 /// # fn example() -> DeltaResult<()> {

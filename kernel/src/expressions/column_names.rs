@@ -28,6 +28,7 @@ impl ColumnName {
     /// padding ignored), but this method would return three fields, including whitespace:
     ///
     /// ```
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::expressions::ColumnName;
     /// assert_eq!(
     ///     ColumnName::from_naive_str_split(" \"a.b\" . c "),
@@ -42,6 +43,7 @@ impl ColumnName {
     /// characters, e.g.:
     ///
     /// ```
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::expressions::ColumnName;
     /// assert_eq!(
     ///     &ColumnName::parse_column_name_list("a.b , c.`d , e` . f").unwrap(),
@@ -76,6 +78,7 @@ impl ColumnName {
     /// [`FromIterator for ColumnName`](#impl-FromIterator<ColumnName>-for-ColumnName) instead:
     ///
     /// ```
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::expressions::ColumnName;
     /// let x = ColumnName::new(["a", "b"]);
     /// let y = ColumnName::new(["c", "d"]);
@@ -101,6 +104,7 @@ impl ColumnName {
     /// # Examples
     ///
     /// ```
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::expressions::ColumnName;
     /// let path = ColumnName::new(["user", "address", "street"]);
     /// assert_eq!(path.parent(), Some(ColumnName::new(["user", "address"])));
@@ -180,21 +184,26 @@ impl Hash for ColumnName {
 /// characters are escaped by backtick symbols:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::ColumnName;
 /// assert_eq!(ColumnName::new(["a", "b.c", "d"]).to_string(), "a.`b.c`.d");
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 ///
 /// Backticks inside escaped field names are themselves escaped by doubling:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::ColumnName;
 /// assert_eq!(ColumnName::new(["a", "b.`c`.d", "e"]).to_string(), "a.`b.``c``.d`.e");
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 ///
 /// The string representation is lossless, and can be parsed back into a `ColumnName` using
 /// [`FromStr`]:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::ColumnName;
 /// let colname = ColumnName::new(["a", "b.c", "d"]);
 /// let parsed: ColumnName = colname.to_string().parse().unwrap();
@@ -247,15 +256,18 @@ fn drop_leading_whitespace(iter: &mut Peekable<impl Iterator<Item = char>>) {
 /// periods and spaces. To include a literal backtick in a field name, escape it by doubling, e.g.:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::ColumnName;
 /// assert_eq!(ColumnName::new(["a", "b.`c`.d", "e"]).to_string(), "a.`b.``c``.d`.e");
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 ///
 /// NOTE: Unlike the conversion from `ColumnName` to `String` and back, a conversion from `String`
 /// to `ColumnName` and back may not exactly match the original string, if the latter included
 /// whitespace or unnecessary field escapes, e.g.:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::ColumnName;
 /// let parsed: ColumnName = " `a` . `b.``c``.d` . `e` ".parse().unwrap();
 /// assert_eq!(parsed.to_string(), "a.`b.``c``.d`.e");
@@ -364,20 +376,25 @@ fn parse_escaped_field_name(chars: &mut Chars<'_>) -> DeltaResult<String> {
 /// field names and that splitting by periods is safe:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::{column_name, ColumnName};
 /// assert_eq!(column_name!("a.b.c"), ColumnName::new(["a", "b", "c"]));
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 ///
 /// To avoid accidental misuse, the argument must be a string literal, so the compiler can validate
 /// the safety conditions. Thus, the following uses would fail to compile:
 ///
 /// ```fail_compile
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::column_name;
 /// let s = "a.b";
 /// let name = column_name!(s); // not a string literal
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 ///
 /// ```fail_compile
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::simple_column_name;
 /// let name = simple_column_name!("a b"); // non-alphanumeric character
 /// ```
@@ -397,14 +414,17 @@ pub use __column_name as column_name;
 /// simple (non-nested) column names. For example:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::{column_name, joined_column_name};
 /// assert_eq!(joined_column_name!("a.b", "c"), column_name!("a.b").join(&column_name!("c")))
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 ///
 /// To avoid accidental misuse, at least one argument must be a string literal. Thus, the following
 /// invocation would fail to compile:
 ///
 /// ```fail_compile
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::joined_column_name;
 /// let s = "s";
 /// let name = joined_column_name!(s, s);
@@ -448,6 +468,7 @@ pub use __column_expr as column_expr;
 ///   runtime `&str`/`String` is a single-segment column; `col!("a.b", "c")` is two segments.
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::expressions::{col, column_expr, ColumnName, Expression};
 /// // A string literal splits on dots at compile time (same as `column_expr!`).
 /// assert_eq!(col!("a.b.c"), Expression::Column(ColumnName::new(["a", "b", "c"])));

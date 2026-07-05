@@ -1,5 +1,6 @@
 //! Integration tests for transaction-identifier write paths.
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::object_store::path::Path;
 use delta_kernel::object_store::ObjectStoreExt as _;
 use delta_kernel::{Error as KernelError, Snapshot};

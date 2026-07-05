@@ -21,8 +21,8 @@ tar = "0.4"
 ureq = { version = "3.1", default-features = false, features = ["native-tls", "gzip"] }
 
 [dependencies]
-delta_kernel = { path = "../kernel", features = ["default-engine-base", "internal-api"] }
-delta_kernel_default_engine = { path = "../default-engine", features = ["rustls"] }
+delta_kernel = { package = "buoyant_kernel", path = "../kernel", features = ["default-engine-base", "internal-api"] }
+delta_kernel_default_engine = { package = "buoyant_kernel_engine", path = "../default-engine", features = ["rustls"] }
 delta_kernel_workloads = { path = "../workloads" }
 delta-kernel-unity-catalog = { path = "../delta-kernel-unity-catalog" }
 object_store = { version = "0.12.3", features = ["aws"] }

@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::Int32Array;
 use delta_kernel::arrow::record_batch::RecordBatch;
 use delta_kernel::engine::arrow_conversion::TryIntoArrow as _;

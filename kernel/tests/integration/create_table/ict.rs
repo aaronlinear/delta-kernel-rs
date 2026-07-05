@@ -6,6 +6,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::snapshot::Snapshot;
 use delta_kernel::table_features::{

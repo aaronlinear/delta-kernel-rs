@@ -4,6 +4,7 @@ use std::fs::OpenOptions;
 use std::ops::RangeInclusive;
 use std::time::{Duration, SystemTime};
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::history_manager::{get_earliest_commit, latest_version_as_of, HistoryCommitType};
 use delta_kernel::object_store::path::Path;

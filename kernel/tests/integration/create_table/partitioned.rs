@@ -2,6 +2,7 @@
 //!
 //! TODO(#2201): Add end-to-end tests for insert + scan + checkpoint on partitioned tables.
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::snapshot::Snapshot;
 use delta_kernel::table_features::TableFeature;

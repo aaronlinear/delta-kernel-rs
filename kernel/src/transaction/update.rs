@@ -150,6 +150,7 @@ impl Transaction {
     ///
     /// ```no_run
     /// # use std::sync::Arc;
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::Engine;
     /// # use delta_kernel::snapshot::Snapshot;
     /// # use delta_kernel::committer::FileSystemCommitter;

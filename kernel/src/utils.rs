@@ -25,6 +25,7 @@ pub(crate) use require;
 /// simplify type bounds. For example, `CollectInto` allows to write this:
 ///
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::CollectInto;
 /// # struct Foo;
 /// fn foo(arg: impl CollectInto<Foo>) -> Foo {

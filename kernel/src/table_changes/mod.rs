@@ -3,6 +3,7 @@
 //! # Example
 //! ```rust
 //! # use std::sync::Arc;
+//! # use buoyant_kernel as delta_kernel;
 //! # use test_utils::delta_kernel_default_engine::{DefaultEngine, DefaultEngineBuilder};
 //! # use delta_kernel::expressions::{column_expr, Scalar};
 //! # use delta_kernel::{Predicate, Snapshot, SnapshotRef, Error, Engine};
@@ -97,6 +98,7 @@ static CDF_FIELDS: LazyLock<[StructField; 3]> = LazyLock::new(|| {
 ///  # Examples
 ///  Get `TableChanges` for versions 0 to 1 (inclusive)
 ///  ```rust
+///  # use buoyant_kernel as delta_kernel;
 ///  # use test_utils::delta_kernel_default_engine::{storage::store_from_url, DefaultEngineBuilder};
 ///  # use delta_kernel::{SnapshotRef, Error};
 ///  # use delta_kernel::table_changes::TableChanges;

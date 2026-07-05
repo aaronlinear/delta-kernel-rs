@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::{ArrayRef, RecordBatch, StringArray};
 use delta_kernel::arrow::datatypes::{DataType as ArrowDataType, Field, Schema as ArrowSchema};
 use delta_kernel::engine::arrow_data::ArrowEngineData;

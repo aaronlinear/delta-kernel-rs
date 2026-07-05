@@ -1,5 +1,6 @@
 //! Integration tests for parsed-stats output.
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::actions::{MAX_VALUES, MIN_VALUES, NULL_COUNT, NUM_RECORDS, STATS_PARSED};
 use delta_kernel::arrow::array::{
     Array, BooleanArray, Decimal128Array, Float32Array, Float64Array, Int16Array, Int32Array,
@@ -9,6 +10,7 @@ use delta_kernel::arrow::compute::filter_record_batch;
 use delta_kernel::arrow::datatypes::DataType as ArrowDataType;
 use delta_kernel::arrow::util::display::array_value_to_string;
 use delta_kernel::engine::arrow_data::ArrowEngineData;
+use delta_kernel::history_manager::{latest_version_as_of, HistoryCommitType};
 use delta_kernel::scan::StatsOptions;
 use delta_kernel::table_features::ColumnMappingMode;
 use delta_kernel::Snapshot;

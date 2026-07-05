@@ -65,6 +65,7 @@ use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::engine::arrow_conversion::TryFromKernel;
 use delta_kernel::engine::arrow_data::ArrowEngineData;
 use delta_kernel::expressions::Scalar;
+use delta_kernel::history_manager::{latest_version_as_of, HistoryCommitType};
 use delta_kernel::object_store::memory::InMemory;
 use delta_kernel::object_store::path::Path;
 use delta_kernel::object_store::{DynObjectStore, Error as ObjectStoreError, ObjectStoreExt as _};
@@ -1720,11 +1721,11 @@ macro_rules! build_snapshot {
             }
             $crate::table_builder::VersionTarget::AtTimestamp(ts) => {
                 let latest = Snapshot::builder_for($table_root).build($engine).unwrap();
-                let commit = ::delta_kernel::history_manager::latest_version_as_of(
+                let commit = latest_version_as_of(
                     &latest,
                     $engine,
                     *ts,
-                    ::delta_kernel::history_manager::HistoryCommitType::Recreatable,
+                    HistoryCommitType::Recreatable,
                 )
                 .unwrap();
                 Snapshot::builder_for($table_root)

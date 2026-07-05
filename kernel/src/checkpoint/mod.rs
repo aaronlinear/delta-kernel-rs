@@ -34,6 +34,7 @@
 //!
 //! ```no_run
 //! # use std::sync::Arc;
+//! # use buoyant_kernel as delta_kernel;
 //! # use delta_kernel::ActionReconciliationIterator;
 //! # use delta_kernel::checkpoint::CheckpointWriter;
 //! # use delta_kernel::Engine;

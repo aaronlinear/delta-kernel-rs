@@ -18,6 +18,7 @@ use crate::{DeltaResult, Engine, Error, Snapshot, Version};
 /// # Example
 ///
 /// ```no_run
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel::{Snapshot, Engine};
 /// # use url::Url;
 /// # fn example(engine: &dyn Engine) -> delta_kernel::DeltaResult<()> {

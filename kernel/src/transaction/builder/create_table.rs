@@ -760,6 +760,7 @@ impl CreateTableTransactionBuilder {
     /// # Example
     ///
     /// ```rust,no_run
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::transaction::create_table::create_table;
     /// # use delta_kernel::schema::{StructType, DataType, StructField};
     /// # use std::sync::Arc;
@@ -803,6 +804,7 @@ impl CreateTableTransactionBuilder {
     /// # Example
     ///
     /// ```rust,no_run
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::transaction::create_table::create_table;
     /// # use delta_kernel::transaction::data_layout::DataLayout;
     /// # use delta_kernel::schema::{StructType, DataType, StructField};

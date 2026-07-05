@@ -4,6 +4,7 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::RecordBatch;
 use delta_kernel::commit_range::{CommitAction, CommitOrdering, CommitRange, DeltaAction};
 use delta_kernel::engine::arrow_data::EngineDataArrowExt as _;

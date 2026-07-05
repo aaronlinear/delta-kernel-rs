@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
 use delta_kernel::actions::{MAX_VALUES, MIN_VALUES, NULL_COUNT};
 use delta_kernel::arrow::array::{

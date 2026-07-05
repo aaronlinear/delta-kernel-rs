@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::actions::deletion_vector::{DeletionVectorDescriptor, DeletionVectorStorageType};
 use delta_kernel::actions::{MAX_VALUES, MIN_VALUES, NUM_RECORDS};
 use delta_kernel::arrow::array::{

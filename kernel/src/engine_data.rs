@@ -476,6 +476,7 @@ pub trait RowVisitor {
 /// Any type that an engine wants to return as "data" needs to implement this trait. The bulk of the
 /// work is in the [`EngineData::visit_rows`] method. See the docs for that method for more details.
 /// ```rust
+/// # use buoyant_kernel as delta_kernel;
 /// # use std::any::Any;
 /// # use delta_kernel::DeltaResult;
 /// # use delta_kernel::engine_data::{RowVisitor, EngineData, GetData};

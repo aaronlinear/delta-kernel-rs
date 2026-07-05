@@ -2,12 +2,14 @@
 
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::{
     Array, BinaryArray, BooleanArray, Int32Array, RecordBatch, StringArray, StructArray,
 };
 use delta_kernel::arrow::compute::filter_record_batch;
 use delta_kernel::engine::arrow_data::ArrowEngineData;
 use delta_kernel::expressions::{col, lit, ColumnName, Predicate};
+use delta_kernel::history_manager::{latest_version_as_of, HistoryCommitType};
 use delta_kernel::object_store::local::LocalFileSystem;
 use delta_kernel::object_store::DynObjectStore;
 use delta_kernel::scan::state::ScanFile;

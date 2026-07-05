@@ -12,6 +12,7 @@
 //! - A **tuple struct** (`struct Foo(T, U);`) — the macro expects named fields.
 
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::IntoEngineData;
 /// #[derive(IntoEngineData)]
 /// pub struct WithFields {
@@ -23,6 +24,7 @@
 pub struct MacroTestStructWithField;
 
 /// ```compile_fail
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::IntoEngineData;
 /// #[derive(IntoEngineData)]
 /// pub struct NoFields;
@@ -31,6 +33,7 @@ pub struct MacroTestStructWithField;
 pub struct MacroTestStructWithoutField;
 
 /// ```compile_fail
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::IntoEngineData;
 /// #[derive(IntoEngineData)]
 /// pub struct TupleStruct(String, i32);

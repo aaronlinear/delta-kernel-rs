@@ -68,6 +68,7 @@ pub trait ExpressionTransform<'a> {
     /// and `Residual` together. Or, define it manually like this:
     /// ```rust,no_run
     /// # use std::borrow::Cow;
+    /// # use buoyant_kernel as delta_kernel;
     /// # use delta_kernel::transforms::{Carrier, ExpressionTransform};
     /// # struct X;
     /// # impl<'a> ExpressionTransform<'a> for X {

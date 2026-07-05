@@ -1,6 +1,7 @@
 //! Doctests for ToSchema derive macro
 
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// #[derive(ToSchema)]
 /// pub struct WithFields {
@@ -11,6 +12,7 @@
 pub struct MacroTestStructWithField;
 
 /// ```compile_fail
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// #[derive(ToSchema)]
 /// pub struct NoFields;
@@ -19,6 +21,7 @@ pub struct MacroTestStructWithField;
 pub struct MacroTestStructWithoutField;
 
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// # use std::collections::HashMap;
 /// #[derive(ToSchema)]
@@ -30,6 +33,7 @@ pub struct MacroTestStructWithoutField;
 pub struct MacroTestStructWithAngleBracketedPathField;
 
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// # use std::collections::HashMap;
 /// #[derive(ToSchema)]
@@ -42,6 +46,7 @@ pub struct MacroTestStructWithAngleBracketedPathField;
 pub struct MacroTestStructWithAttributedField;
 
 /// ```compile_fail
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// #[derive(ToSchema)]
 /// pub struct WithInvalidAttributeTarget {
@@ -56,6 +61,7 @@ pub struct MacroTestStructWithInvalidAttributeTarget;
 /// This is needed for optional map fields like `Remove.partition_values` that can contain
 /// null values.
 /// ```
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// # use std::collections::HashMap;
 /// #[derive(ToSchema)]
@@ -69,6 +75,7 @@ pub struct MacroTestStructWithOptionalAttributedField;
 
 /// Verify that `#[allow_null_container_values]` fails on `Option<_>` fields that are not maps.
 /// ```compile_fail
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// #[derive(ToSchema)]
 /// pub struct WithInvalidOptionalAttributeTarget {
@@ -80,6 +87,7 @@ pub struct MacroTestStructWithOptionalAttributedField;
 pub struct MacroTestStructWithInvalidOptionalAttributeTarget;
 
 /// ```compile_fail
+/// # use buoyant_kernel as delta_kernel;
 /// # use delta_kernel_derive::ToSchema;
 /// # use syn::Token;
 /// #[derive(ToSchema)]

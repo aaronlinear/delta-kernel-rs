@@ -1,7 +1,7 @@
 [package]
-name = "delta_kernel"
-description = "Core crate providing a Delta/Deltalake implementation focused on interoperability with a wide range of query engines."
-documentation = "https://docs.rs/delta_kernel"
+name = "buoyant_kernel"
+description = "Buoyant Data distribution of delta-kernel"
+documentation = "https://docs.rs/buoyant_kernel"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
@@ -39,7 +39,7 @@ pre-release-hook = [
 ]
 
 [dependencies]
-delta_kernel_derive = { path = "../derive-macros", version = "0.25.0" }
+delta_kernel_derive = { package = "buoyant_kernel_derive", path = "../derive-macros", version = "1"}
 bytes = "1.10"
 chrono = "0.4.41"
 crc = "3.2.2"
@@ -116,7 +116,6 @@ schema-diff = []
 
 # Declarative plan IR (experimental).
 declarative-plans = ["internal-api", "dep:prost", "dep:prost-build", "dep:protoc-bin-vendored"]
-
 # Experimental, temporary, test-only feature flag guarding the in-progress column-defaults
 # work. TODO(#2630): remove once full column-defaults support ships.
 column-defaults-in-dev = []
@@ -138,7 +137,7 @@ prost-build = { version = "0.13", optional = true }
 protoc-bin-vendored = { version = "3.2", optional = true }
 
 [dev-dependencies]
-delta_kernel = { path = ".", features = ["test-utils"] }
+delta_kernel = { package = "buoyant_kernel", path = ".", features = ["test-utils"] }
 # NOTE: test_utils forcibly pulls the default engine and arrow-58. By default it ALSO pulls
 # arrow-59, which takes precedence and would make it impossible to test against arrow-58.
 test_utils = { path = "../test-utils", default-features = false }

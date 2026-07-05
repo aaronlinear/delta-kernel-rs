@@ -11,6 +11,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::Snapshot;
 use hdfs_native::{Client, WriteOptions};
 use hdfs_native_object_store::minidfs::MiniDfs;

@@ -1,5 +1,5 @@
 [package]
-name = "delta_kernel_default_engine"
+name = "buoyant_kernel_engine"
 description = "Default Arrow/Tokio-based engine implementation for delta_kernel."
 edition.workspace = true
 homepage.workspace = true
@@ -16,7 +16,7 @@ pre-release-replacements = [
 ]
 
 [dependencies]
-delta_kernel = { path = "../kernel", version = "0.25.0", features = [
+delta_kernel = { package = "buoyant_kernel", path = "../kernel", version = "0.25.0", features = [
   "default-engine-base",
   "internal-api",
 ] }

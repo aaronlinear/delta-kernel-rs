@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::schema::{
     schema_ref, ColumnMetadataKey, DataType, MetadataValue, StructField, StructType,
@@ -72,6 +73,7 @@ fn test_schema_with_column_defaults_overwrites_existing_default() {
 mod feature_disabled {
     use std::sync::Arc;
 
+    use buoyant_kernel as delta_kernel;
     use delta_kernel::committer::FileSystemCommitter;
     use delta_kernel::schema::{DataType, StructField, StructType};
     use delta_kernel::Snapshot;

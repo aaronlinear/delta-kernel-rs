@@ -112,6 +112,7 @@ pub struct DefaultEngine<E: TaskExecutor> {
 ///
 /// ```no_run
 /// # use std::sync::Arc;
+/// # use buoyant_kernel_engine as delta_kernel_default_engine;
 /// # use delta_kernel_default_engine::DefaultEngineBuilder;
 /// # use delta_kernel_default_engine::executor::tokio::TokioBackgroundExecutor;
 /// # use delta_kernel::object_store::local::LocalFileSystem;

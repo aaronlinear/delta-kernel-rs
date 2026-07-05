@@ -5,6 +5,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::Int32Array;
 use delta_kernel::committer::{Committer, FileSystemCommitter};
 use delta_kernel::metrics::{MetricEvent, TableType};

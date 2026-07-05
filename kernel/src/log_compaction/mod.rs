@@ -31,6 +31,7 @@
 //!
 //! ```no_run
 //! # use std::sync::Arc;
+//! # use buoyant_kernel as delta_kernel;
 //! # use delta_kernel::{ActionReconciliationIterator, LogCompactionWriter};
 //! # use delta_kernel::{Engine, Snapshot, DeltaResult, Error, FileMeta};
 //! # use url::Url;

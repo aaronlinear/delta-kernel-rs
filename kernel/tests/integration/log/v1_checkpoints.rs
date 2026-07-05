@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::RecordBatchReader;
 use delta_kernel::checkpoint::CheckpointSpec;
 use delta_kernel::parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;

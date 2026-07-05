@@ -8,6 +8,7 @@ use std::collections::HashSet;
 use std::num::NonZero;
 use std::sync::Arc;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::incremental_scan::{
     IncrementalListing, IncrementalListingAgainstBase, IncrementalScanStream,
     IncrementalScanSummary,

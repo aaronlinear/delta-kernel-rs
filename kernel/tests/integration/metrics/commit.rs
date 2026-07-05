@@ -5,6 +5,7 @@
 
 use std::sync::{Arc, Mutex};
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::arrow::array::Int32Array;
 use delta_kernel::committer::FileSystemCommitter;
 use delta_kernel::metrics::{MetricEvent, MetricsReporter, TableType, TransactionCommitSuccess};

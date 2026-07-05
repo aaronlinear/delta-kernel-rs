@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::vec;
 
+use buoyant_kernel as delta_kernel;
 use delta_kernel::actions::deletion_vector::split_vector;
 use delta_kernel::arrow::array::{ArrayRef, AsArray as _, RecordBatch, TimestampMicrosecondArray};
 use delta_kernel::arrow::compute::{concat_batches, filter_record_batch};

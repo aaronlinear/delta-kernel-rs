@@ -21,6 +21,7 @@ use crate::{DeltaResult, Error};
 /// # Examples
 ///
 /// ```rust
+/// # use buoyant_kernel as delta_kernel;
 /// use delta_kernel::actions::deletion_vector_writer::DeletionVector;
 ///
 /// struct MyDeletionVector {
@@ -111,6 +112,7 @@ impl DeletionVectorWriteResult {
 /// # Examples
 ///
 /// ```rust
+/// # use buoyant_kernel as delta_kernel;
 /// use delta_kernel::actions::deletion_vector_writer::KernelDeletionVector;
 ///
 /// let mut dv = KernelDeletionVector::new();
@@ -191,6 +193,7 @@ impl DeletionVector for KernelDeletionVector {
 /// # Examples
 ///
 /// ```rust
+/// # use buoyant_kernel as delta_kernel;
 /// use delta_kernel::actions::deletion_vector_writer::{StreamingDeletionVectorWriter, KernelDeletionVector};
 ///
 /// let mut buffer = Vec::new();
