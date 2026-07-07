@@ -835,7 +835,7 @@ dependencies = [
 
 [[package]]
 name = "buoyant_kernel_derive"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
