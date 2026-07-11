@@ -1596,7 +1596,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "log compaction disabled (#2337)"]
     fn test_log_compaction_writer() {
         let path =
             std::fs::canonicalize(PathBuf::from("./tests/data/table-with-dv-small/")).unwrap();
@@ -1620,20 +1619,6 @@ mod tests {
         // Test equal version range (also invalid)
         let result = snapshot.log_compaction_writer(1, 1);
         assert_result_error_with_message(result, "Invalid version range");
-    }
-
-    // TODO(#2337): remove this test when log compaction is re-enabled.
-    #[test]
-    fn test_log_compaction_writer_unsupported() {
-        let path =
-            std::fs::canonicalize(PathBuf::from("./tests/data/table-with-dv-small/")).unwrap();
-        let url = url::Url::from_directory_path(path).unwrap();
-
-        let engine = SyncEngine::new();
-        let snapshot = Snapshot::builder_for(url).build(&engine).unwrap();
-
-        let result = snapshot.log_compaction_writer(0, 1);
-        assert_result_error_with_message(result, "not currently supported");
     }
 
     #[tokio::test]
