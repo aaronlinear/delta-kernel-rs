@@ -319,14 +319,14 @@ fn test_should_compact_percentage_logic() {
     assert!(should_compact(19, 10));
     assert!(should_compact(99, 100));
     assert!(should_compact(59, 20));
-    
+
     // Test that compaction does NOT occur when not at intervals
     assert!(!should_compact(5, 10));
     assert!(!should_compact(15, 10));
     assert!(!should_compact(99, 1000));
     assert!(!should_compact(109, 20)); // 110 is not a multiple of 20
-    
+
     // Test edge cases
-    assert!(!should_compact(0, 10));  // commit 0 is metadata, never compact
-    assert!(!should_compact(10, 0));  // zero interval disabled
+    assert!(!should_compact(0, 10)); // commit 0 is metadata, never compact
+    assert!(!should_compact(10, 0)); // zero interval disabled
 }

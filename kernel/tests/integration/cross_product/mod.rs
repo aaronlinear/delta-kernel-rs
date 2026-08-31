@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use buoyant_kernel as delta_kernel;
-
+use delta_kernel::history_manager::{latest_version_as_of, HistoryCommitType};
 use delta_kernel::schema::MetadataColumnSpec;
 use delta_kernel::{DeltaResult, Engine, Snapshot};
-use delta_kernel::history_manager::{latest_version_as_of, HistoryCommitType};
 use rstest::rstest;
 use rstest_reuse::apply;
 use test_utils::delta_kernel_default_engine::DefaultEngineBuilder;

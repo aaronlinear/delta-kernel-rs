@@ -370,6 +370,16 @@ impl PlanBuilder {
         self.aggregate(aggs(builder))
     }
 
+    /// Aggregate `self` without grouping. The result always contains one row, including for an
+    /// empty input relation.
+    pub fn aggregate_ungrouped(
+        self,
+        aggs: impl FnOnce(AggregateBuilder) -> AggregateBuilder,
+    ) -> DeltaResult<Self> {
+        let builder = Aggregate::ungrouped(Arc::clone(self.schema()));
+        self.aggregate(aggs(builder))
+    }
+
     /// Semi join: emit the `self` (probe) rows that have a match in `build` on the join keys.
     /// Output schema mirrors `self`. Inputs are recorded as `[probe, build]`. See [`SemiJoin`].
     ///
@@ -887,8 +897,11 @@ mod tests {
     fn aggregate_outputs_keys_then_aggs() -> DeltaResult<()> {
         // Group by `id`, take the latest `part` by version -- output is `{id, part}`.
         let agg = vals(part_schema()).aggregate(
-            Aggregate::group_by(part_schema(), [column_name!("id")])
-                .max_non_null_by(column_name!("part"), column_name!("id")),
+            Aggregate::group_by(part_schema(), [column_name!("id")]).max_non_null_by(
+                column_name!("part"),
+                column_name!("part"),
+                column_name!("id"),
+            ),
         )?;
         assert_eq!(agg.schema(), &part_schema());
         assert_plan(agg, &[(&[], "values"), (&[0], "aggregate")]);
@@ -900,7 +913,11 @@ mod tests {
     #[test]
     fn aggregate_by_infers_input_schema() -> DeltaResult<()> {
         let agg = vals(part_schema()).aggregate_by([column_name!("id")], |a| {
-            a.max_non_null_by(column_name!("part"), column_name!("id"))
+            a.max_non_null_by(
+                column_name!("part"),
+                column_name!("part"),
+                column_name!("id"),
+            )
         })?;
         assert_eq!(agg.schema(), &part_schema());
         assert_plan(agg, &[(&[], "values"), (&[0], "aggregate")]);

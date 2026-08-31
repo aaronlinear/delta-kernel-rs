@@ -378,11 +378,8 @@ impl TryFromKernel<&DataType> for ArrowDataType {
                         Ok(ArrowDataType::Timestamp(TimeUnit::Nanosecond, None))
                     }
                     PrimitiveType::Void => Ok(ArrowDataType::Null),
-                    PrimitiveType::IntervalYearMonth | PrimitiveType::IntervalDayTime => {
-                        Err(ArrowError::SchemaError(format!(
-                            "Interval types are not yet supported in the default engine: {p}"
-                        )))
-                    }
+                    PrimitiveType::IntervalYearMonth => Ok(ArrowDataType::Int32),
+                    PrimitiveType::IntervalDayTime => Ok(ArrowDataType::Int64),
                 }
             }
             DataType::Struct(s) => Ok(ArrowDataType::Struct(
@@ -822,13 +819,16 @@ mod tests {
         Ok(())
     }
 
-    // Make sure that interval types error gracefully since unsupported
+    // Asserts forward interval column mapping (year-month/day-time to Int32/Int64).
     #[rstest]
-    #[case(DataType::INTERVAL_YEAR_MONTH)]
-    #[case(DataType::INTERVAL_DAY_TIME)]
-    fn test_interval_type_arrow_conversion_unsupported(#[case] dt: DataType) {
-        let result: Result<ArrowDataType, _> = (&dt).try_into_arrow();
-        assert!(matches!(result.unwrap_err(), ArrowError::SchemaError(_)));
+    #[case(DataType::INTERVAL_YEAR_MONTH, ArrowDataType::Int32)]
+    #[case(DataType::INTERVAL_DAY_TIME, ArrowDataType::Int64)]
+    fn test_interval_type_arrow_conversion(
+        #[case] kernel_type: DataType,
+        #[case] expected: ArrowDataType,
+    ) -> DeltaResult<()> {
+        assert_eq!(ArrowDataType::try_from_kernel(&kernel_type)?, expected);
+        Ok(())
     }
 
     /// Helper visitor to collect all field IDs from a kernel StructType

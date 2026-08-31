@@ -815,7 +815,7 @@ impl PrimitiveType {
                     TimestampNtz => Ok(Scalar::TimestampNtz(micros)),
                     _ => unreachable!(),
                 }
-            },
+            }
             IntervalYearMonth | IntervalDayTime => Err(Error::unsupported(
                 "Interval types are not supported as scalar or partition values",
             )),

@@ -1,0 +1,31 @@
+[package]
+name = "datafusion_executor"
+description = "DataFusion-based PlanExecutor for delta_kernel declarative plans."
+edition = "2021"
+homepage = "https://delta.io"
+license = "Apache-2.0"
+repository = "https://github.com/buoyant-data/delta-kernel-rs"
+version = "0.25.1"
+rust-version = "1.94"
+
+[workspace]
+
+[dependencies]
+async-trait = "0.1"
+bytes = "1"
+chrono = "0.4"
+delta_kernel = { package = "buoyant_kernel", path = "../kernel", default-features = false, features = [
+  "declarative-plans",
+  "arrow-59",
+  "default-engine-base",
+] }
+datafusion = "55"
+futures = "0.3"
+itertools = "0.14"
+tokio = { version = "1", features = ["rt"] }
+url = "2"
+
+[dev-dependencies]
+rstest = "0.23"
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

@@ -131,9 +131,13 @@ use crate::{
     FileMeta, Version,
 };
 
+#[cfg(feature = "declarative-plans")]
+mod checkpoint_shape;
 mod checkpoint_transform;
 mod sidecar;
 
+#[cfg(feature = "declarative-plans")]
+pub(crate) use checkpoint_shape::{CheckpointShape, CheckpointType};
 use checkpoint_transform::{
     build_checkpoint_read_schema, build_checkpoint_transform, StatsTransformConfig,
 };

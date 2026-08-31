@@ -63,11 +63,8 @@ impl LogCompactionWriter {
         snapshot.log_segment().validate_published()?;
 
         // Compute the compaction path once during construction
-        let compaction_path = ParsedLogPath::new_log_compaction(
-            snapshot.table_root(),
-            start_version,
-            end_version,
-        )?;
+        let compaction_path =
+            ParsedLogPath::new_log_compaction(snapshot.table_root(), start_version, end_version)?;
 
         Ok(Self {
             snapshot,

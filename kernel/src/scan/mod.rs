@@ -15,7 +15,9 @@ use self::log_replay::{get_scan_metadata_transform_expr, scan_action_iter};
 use crate::actions::deletion_vector::{
     deletion_treemap_to_bools, split_vector, DeletionVectorDescriptor,
 };
-use crate::actions::{Add, ADD_FIELD, ADD_NAME, REMOVE_FIELD};
+use crate::actions::{Add, ADD_FIELD, ADD_NAME, NULL_COUNT, REMOVE_FIELD};
+#[cfg(feature = "declarative-plans")]
+use crate::checkpoint::CheckpointShape;
 use crate::engine_data::FilteredEngineData;
 use crate::expressions::{ColumnName, ExpressionRef, Predicate, PredicateRef, Scalar};
 use crate::kernel_predicates::{
@@ -27,6 +29,8 @@ use crate::log_segment_files::LogSegmentFiles;
 use crate::metrics::events::emit_scan_metadata_completed;
 use crate::metrics::{MetricId, ScanType};
 use crate::parallel::sequential_phase::SequentialPhase;
+#[cfg(feature = "declarative-plans")]
+use crate::plans::ir::plan::Plan;
 use crate::scan::log_replay::{
     ScanLogReplayProcessor, BASE_ROW_ID_NAME, CLUSTERING_PROVIDER_NAME,
     DEFAULT_ROW_COMMIT_VERSION_NAME,
@@ -37,7 +41,8 @@ use crate::schema::{
     lazy_schema_ref, ArrayType, DataType, MapType, PrimitiveType, Schema, SchemaRef, StructField,
     StructType, ToSchema as _,
 };
-use crate::table_features::{ColumnMappingMode, Operation};
+use crate::table_configuration::TableConfiguration;
+use crate::table_features::{get_any_level_column_physical_name, ColumnMappingMode, Operation};
 use crate::transforms::{transform_output_type, ExpressionTransform, SchemaTransform};
 use crate::utils::{FoldWithOption as _, IteratorExt};
 use crate::{DeltaResult, Engine, EngineData, Error, FileMeta, SnapshotRef, Version};
@@ -46,6 +51,8 @@ pub(crate) mod data_skipping;
 pub(crate) mod field_classifiers;
 pub mod log_replay;
 pub(crate) mod metrics;
+#[cfg(feature = "declarative-plans")]
+mod scan_plan;
 pub mod state;
 pub(crate) mod state_info;
 pub(crate) mod transform_spec;
@@ -386,10 +393,17 @@ impl ScanBuilder {
         // per-row partition-value parse done only to build them.
         state_info.skip_row_transforms = self.without_row_transforms;
 
+        let physical_stats_output_schema = build_physical_stats_output_schema(
+            self.snapshot.table_configuration(),
+            &state_info,
+            &self.stats,
+        )?;
+
         Ok(Scan {
             snapshot: self.snapshot,
             state_info: Arc::new(state_info),
             stats: self.stats,
+            physical_stats_output_schema,
             correlation_id: self.correlation_id,
             partition_values: self.partition_values,
         })
@@ -651,8 +665,41 @@ pub struct Scan {
     snapshot: SnapshotRef,
     state_info: Arc<StateInfo>,
     stats: StatsOptions,
+    #[allow(dead_code)]
+    physical_stats_output_schema: Option<SchemaRef>,
     correlation_id: Option<Arc<str>>,
     partition_values: PartitionValuesOptions,
+}
+
+/// Builds the physical stats_parsed output schema requested through StatsOptions.
+fn build_physical_stats_output_schema(
+    table_configuration: &TableConfiguration,
+    state_info: &StateInfo,
+    stats: &StatsOptions,
+) -> DeltaResult<Option<SchemaRef>> {
+    match &stats.struct_stats {
+        StructStats::None => Ok(None),
+        StructStats::All => Ok(state_info.physical_stats_schema.clone()),
+        StructStats::Columns(columns) if columns.is_empty() => Ok(None),
+        StructStats::Columns(columns) => {
+            let logical_schema = table_configuration.logical_schema();
+            let column_mapping_mode = table_configuration.column_mapping_mode();
+            let physical_columns: Vec<_> = columns
+                .iter()
+                .map(|column| {
+                    get_any_level_column_physical_name(&logical_schema, column, column_mapping_mode)
+                })
+                .try_collect()?;
+            let stats_schema = table_configuration
+                .build_expected_stats_schemas(None, Some(&physical_columns))?
+                .physical;
+            Ok(stats_schema_with_data_columns(stats_schema))
+        }
+    }
+}
+
+fn stats_schema_with_data_columns(schema: SchemaRef) -> Option<SchemaRef> {
+    schema.field(NULL_COUNT).is_some().then_some(schema)
 }
 
 impl std::fmt::Debug for Scan {
@@ -761,6 +808,22 @@ impl Scan {
     ) -> DeltaResult<impl Iterator<Item = DeltaResult<ScanMetadata>>> {
         let actions_with_checkpoint_info = self.replay_for_scan_metadata(engine)?;
         self.scan_metadata_inner(engine, actions_with_checkpoint_info)
+    }
+
+    #[cfg(feature = "declarative-plans")]
+    /// Builds a declarative plan that produces the scan's live `add` actions.
+    ///
+    /// `engine` supplies the plan executor used to inspect checkpoint shape. Returns `None` when
+    /// no Delta metadata matches this scan. This method returns the metadata plan without
+    /// executing it so the connector can decide how to consume or further project the live adds.
+    pub fn declarative_metadata_scan_plan(&self, engine: &dyn Engine) -> DeltaResult<Option<Plan>> {
+        let executor = engine.require_plan_executor()?;
+        let shape = CheckpointShape::try_new(
+            executor.as_ref(),
+            &self.snapshot,
+            self.state_info.physical_stats_schema.as_ref(),
+        )?;
+        self.build_metadata_scan_plan(&shape)
     }
 
     /// Get an updated iterator of [`ScanMetadata`]s based on an existing iterator of

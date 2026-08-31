@@ -250,22 +250,31 @@ impl From<&Aggregate> for proto_plan::AggregateNode {
 impl From<&Agg> for proto_plan::Agg {
     fn from(agg: &Agg) -> Self {
         let func = match agg {
-            Agg::Min { value } => proto_agg::Func::Min(proto_plan::MinAgg {
+            Agg::Min(value) => proto_agg::Func::Min(proto_plan::MinAgg {
                 value: Some(value.into()),
             }),
-            Agg::Max { value } => proto_agg::Func::Max(proto_plan::MaxAgg {
+            Agg::Max(value) => proto_agg::Func::Max(proto_plan::MaxAgg {
                 value: Some(value.into()),
             }),
-            Agg::MinNonNullBy { value, key } => {
+            Agg::Sum(value) => proto_agg::Func::Sum(proto_plan::SumAgg {
+                value: Some(value.into()),
+            }),
+            Agg::Count(value) => proto_agg::Func::Count(proto_plan::CountAgg {
+                value: Some(value.into()),
+            }),
+            Agg::CountStar => proto_agg::Func::CountStar(proto_plan::CountStarAgg {}),
+            Agg::MinNonNullBy(operands) => {
                 proto_agg::Func::MinNonNullBy(proto_plan::MinNonNullByAgg {
-                    value: Some(value.into()),
-                    key: Some(key.into()),
+                    value: Some((&operands.value).into()),
+                    null_sentinel: Some((&operands.null_sentinel).into()),
+                    key: Some((&operands.key).into()),
                 })
             }
-            Agg::MaxNonNullBy { value, key } => {
+            Agg::MaxNonNullBy(operands) => {
                 proto_agg::Func::MaxNonNullBy(proto_plan::MaxNonNullByAgg {
-                    value: Some(value.into()),
-                    key: Some(key.into()),
+                    value: Some((&operands.value).into()),
+                    null_sentinel: Some((&operands.null_sentinel).into()),
+                    key: Some((&operands.key).into()),
                 })
             }
         };
@@ -619,26 +628,34 @@ impl From<&DataType> for proto_schema::DataType {
 impl From<&PrimitiveType> for proto_schema::PrimitiveType {
     fn from(primitive: &PrimitiveType) -> Self {
         let kind = match primitive {
-            PrimitiveType::String => Kind::Simple(Simple::String as i32),
-            PrimitiveType::Long => Kind::Simple(Simple::Long as i32),
-            PrimitiveType::Integer => Kind::Simple(Simple::Integer as i32),
-            PrimitiveType::Short => Kind::Simple(Simple::Short as i32),
-            PrimitiveType::Byte => Kind::Simple(Simple::Byte as i32),
-            PrimitiveType::Float => Kind::Simple(Simple::Float as i32),
-            PrimitiveType::Double => Kind::Simple(Simple::Double as i32),
-            PrimitiveType::Boolean => Kind::Simple(Simple::Boolean as i32),
-            PrimitiveType::Binary => Kind::Simple(Simple::Binary as i32),
-            PrimitiveType::Date => Kind::Simple(Simple::Date as i32),
-            PrimitiveType::Timestamp => Kind::Simple(Simple::Timestamp as i32),
-            PrimitiveType::TimestampNtz => Kind::Simple(Simple::TimestampNtz as i32),
+            PrimitiveType::String => PrimitiveTypeKind::Simple(Simple::String as i32),
+            PrimitiveType::Long => PrimitiveTypeKind::Simple(Simple::Long as i32),
+            PrimitiveType::Integer => PrimitiveTypeKind::Simple(Simple::Integer as i32),
+            PrimitiveType::Short => PrimitiveTypeKind::Simple(Simple::Short as i32),
+            PrimitiveType::Byte => PrimitiveTypeKind::Simple(Simple::Byte as i32),
+            PrimitiveType::Float => PrimitiveTypeKind::Simple(Simple::Float as i32),
+            PrimitiveType::Double => PrimitiveTypeKind::Simple(Simple::Double as i32),
+            PrimitiveType::Boolean => PrimitiveTypeKind::Simple(Simple::Boolean as i32),
+            PrimitiveType::Binary => PrimitiveTypeKind::Simple(Simple::Binary as i32),
+            PrimitiveType::Date => PrimitiveTypeKind::Simple(Simple::Date as i32),
+            PrimitiveType::Timestamp => PrimitiveTypeKind::Simple(Simple::Timestamp as i32),
+            PrimitiveType::TimestampNtz => PrimitiveTypeKind::Simple(Simple::TimestampNtz as i32),
             #[cfg(feature = "nanosecond-timestamps")]
-            PrimitiveType::TimestampNanos => Kind::Simple(Simple::TimestampNanos as i32),
+            PrimitiveType::TimestampNanos => {
+                PrimitiveTypeKind::Simple(Simple::TimestampNanos as i32)
+            }
             #[cfg(feature = "nanosecond-timestamps")]
-            PrimitiveType::TimestampNanosNtz => Kind::Simple(Simple::TimestampNanosNtz as i32),
-            PrimitiveType::Decimal(decimal) => Kind::Decimal((*decimal).into()),
-            PrimitiveType::Void => Kind::Simple(Simple::Void as i32),
-            PrimitiveType::IntervalYearMonth => Kind::Simple(Simple::IntervalYearMonth as i32),
-            PrimitiveType::IntervalDayTime => Kind::Simple(Simple::IntervalDayTime as i32),
+            PrimitiveType::TimestampNanosNtz => {
+                PrimitiveTypeKind::Simple(Simple::TimestampNanosNtz as i32)
+            }
+            PrimitiveType::Decimal(decimal) => PrimitiveTypeKind::Decimal((*decimal).into()),
+            PrimitiveType::Void => PrimitiveTypeKind::Simple(Simple::Void as i32),
+            PrimitiveType::IntervalYearMonth => {
+                PrimitiveTypeKind::Simple(Simple::IntervalYearMonth as i32)
+            }
+            PrimitiveType::IntervalDayTime => {
+                PrimitiveTypeKind::Simple(Simple::IntervalDayTime as i32)
+            }
         };
         proto_schema::PrimitiveType { kind: Some(kind) }
     }
@@ -787,6 +804,16 @@ impl TryFrom<proto_schema::PrimitiveType> for PrimitiveType {
                     Simple::Date => PrimitiveType::Date,
                     Simple::Timestamp => PrimitiveType::Timestamp,
                     Simple::TimestampNtz => PrimitiveType::TimestampNtz,
+                    #[cfg(feature = "nanosecond-timestamps")]
+                    Simple::TimestampNanos => PrimitiveType::TimestampNanos,
+                    #[cfg(feature = "nanosecond-timestamps")]
+                    Simple::TimestampNanosNtz => PrimitiveType::TimestampNanosNtz,
+                    #[cfg(not(feature = "nanosecond-timestamps"))]
+                    Simple::TimestampNanos | Simple::TimestampNanosNtz => {
+                        return Err(Error::schema(
+                            "nanosecond timestamp types require the 'nanosecond-timestamps' feature",
+                        ))
+                    }
                     Simple::Void => PrimitiveType::Void,
                     Simple::IntervalYearMonth => PrimitiveType::IntervalYearMonth,
                     Simple::IntervalDayTime => PrimitiveType::IntervalDayTime,
@@ -1368,8 +1395,19 @@ mod tests {
     #[rstest]
     #[case(Agg::min(ColumnName::new(["a"])), "min")]
     #[case(Agg::max(ColumnName::new(["a"])), "max")]
-    #[case(Agg::min_non_null_by(ColumnName::new(["a"]), ColumnName::new(["k"])), "min_non_null_by")]
-    #[case(Agg::max_non_null_by(ColumnName::new(["a"]), ColumnName::new(["k"])), "max_non_null_by")]
+    #[case(Agg::sum(ColumnName::new(["a"])), "sum")]
+    #[case(Agg::count(ColumnName::new(["a"])), "count")]
+    #[case(Agg::count_star(), "count_star")]
+    #[case(Agg::min_non_null_by(
+        ColumnName::new(["a"]),
+        ColumnName::new(["s"]),
+        ColumnName::new(["k"]),
+    ), "min_non_null_by")]
+    #[case(Agg::max_non_null_by(
+        ColumnName::new(["a"]),
+        ColumnName::new(["s"]),
+        ColumnName::new(["k"]),
+    ), "max_non_null_by")]
     fn from_agg(#[case] agg: Agg, #[case] expected: &str) {
         use proto_plan::agg::Func;
         let proto = proto_plan::Agg::from(&agg);
@@ -1378,6 +1416,9 @@ mod tests {
             Func::Max(_) => "max",
             Func::MinNonNullBy(_) => "min_non_null_by",
             Func::MaxNonNullBy(_) => "max_non_null_by",
+            Func::Sum(_) => "sum",
+            Func::Count(_) => "count",
+            Func::CountStar(_) => "count_star",
         };
         assert_eq!(kind, expected);
     }

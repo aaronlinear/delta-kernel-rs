@@ -48,6 +48,11 @@ pub fn lit(value: impl Into<Scalar>) -> Expression {
     Expression::literal(value)
 }
 
+/// Builds a typed NULL literal.
+pub fn null_lit(data_type: impl Into<DataType>) -> Expression {
+    Expression::Literal(Scalar::null(data_type))
+}
+
 /// A [`StructPatchBuilder`](crate::struct_patch::StructPatchBuilder) whose emitted items are
 /// expressions, lowered into an [`ExpressionStructPatch`] that can be embedded in an
 /// [`Expression`].
@@ -749,6 +754,14 @@ impl Expression {
 }
 
 impl Predicate {
+    /// Literal boolean true.
+    pub const TRUE: Self = Self::literal(true);
+    /// Literal boolean false.
+    pub const FALSE: Self = Self::literal(false);
+    /// NULL boolean literal.
+    pub const NULL: Self =
+        Self::BooleanExpression(Expression::Literal(Scalar::Null(DataType::BOOLEAN)));
+
     /// Returns a set of columns referenced by this predicate.
     pub fn references(&self) -> HashSet<&ColumnName> {
         let mut references = GetColumnReferences::default();

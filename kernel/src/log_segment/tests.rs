@@ -4300,9 +4300,10 @@ fn test_schema_to_is_not_null_predicate(
 /// checkpoint writing calls `schema.asNullable` which forces all maps nullable. The
 /// schema must match this behavior.
 ///
-/// This test reads JSON actions through `DefaultEngine` + `InMemory` store +
+/// This test reads JSON actions through `SyncEngine` + `InMemory` store +
 /// `log_segment.read_actions()`, then re-validates the resulting Arrow `StructArray` with
-/// `StructArray::try_new`. Without the fix, non-nullable map value fields cause:
+/// `StructArray::try_new`. Arrow 59 performs this validation during JSON decoding, while Arrow 58
+/// requires the explicit revalidation. Non-nullable map value fields containing nulls cause:
 ///   "Found unmasked nulls for non-nullable StructArray field 'value'"
 #[rstest]
 // remove.partitionValues.month: null
@@ -4355,14 +4356,12 @@ fn test_schema_to_is_not_null_predicate(
 )]
 // Known issues: these map fields don't yet have #[allow_null_container_values].
 // commitInfo.operationParameters.description: null
-#[should_panic(expected = "StructArray re-validation failed")]
 #[case::commit_info_operation_parameters_known_issue(
     "commitInfo",
     "operationParameters",
     r#"{"commitInfo":{"timestamp":1000,"operation":"WRITE","operationParameters":{"mode":"ErrorIfExists","description":null}}}"#
 )]
 // metaData.configuration.key2: null
-#[should_panic(expected = "StructArray re-validation failed")]
 #[case::metadata_configuration_known_issue(
     "metaData",
     "configuration",
@@ -4375,6 +4374,9 @@ async fn read_actions_with_null_map_values(
     #[case] json_action: &str,
 ) {
     use crate::arrow::array::{Array, AsArray, MapArray, StructArray};
+
+    const NON_NULLABLE_MAP_VALUE_ERROR: &str =
+        "Found unmasked nulls for non-nullable StructArray field \"value\"";
 
     let store = Arc::new(InMemory::new());
     let log_root = Url::parse("memory:///_delta_log/").unwrap();
@@ -4401,8 +4403,17 @@ async fn read_actions_with_null_map_values(
         .expect("read_actions should succeed");
 
     // Iterate batches and verify the map value field is nullable.
+    let non_nullable_map_value_known_issue = matches!(
+        (action_name, map_field),
+        ("commitInfo", "operationParameters") | ("metaData", "configuration")
+    );
     let mut found = false;
     for batch_result in action_batches {
+        #[cfg(feature = "arrow-59")]
+        if non_nullable_map_value_known_issue {
+            assert_result_error_with_message(batch_result, NON_NULLABLE_MAP_VALUE_ERROR);
+            return;
+        }
         let actions_batch = batch_result.expect("Iterating action batches should succeed");
 
         let data_any = actions_batch.actions.into_any();
@@ -4424,16 +4435,21 @@ async fn read_actions_with_null_map_values(
             .as_any()
             .downcast_ref::<MapArray>()
             .unwrap_or_else(|| panic!("{action_name}.{map_field} should be a MapArray"));
-        // Re-validate the entries StructArray with its own schema, same as what Arrow's
-        // IPC deserializer does. Without the fix, this fails with:
+        // Revalidate the entries StructArray with its own schema, matching Arrow's IPC
+        // deserializer. A schema/data nullability mismatch returns:
         // "Found unmasked nulls for non-nullable StructArray field 'value'"
         let entries = map_array.entries();
-        StructArray::try_new(
+        let validation = StructArray::try_new(
             entries.fields().clone(),
             entries.columns().to_vec(),
             entries.nulls().cloned(),
-        )
-        .unwrap_or_else(|e| {
+        );
+        #[cfg(all(feature = "arrow-58", not(feature = "arrow-59")))]
+        if non_nullable_map_value_known_issue {
+            assert_result_error_with_message(validation, NON_NULLABLE_MAP_VALUE_ERROR);
+            return;
+        }
+        validation.unwrap_or_else(|e| {
             panic!(
                 "{action_name}.{map_field} entries StructArray re-validation failed: {e}. \
                  This means the schema has non-nullable value field but the data has nulls."

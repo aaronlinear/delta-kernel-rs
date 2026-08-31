@@ -1734,13 +1734,9 @@ macro_rules! build_snapshot {
             }
             $crate::table_builder::VersionTarget::AtTimestamp(ts) => {
                 let latest = Snapshot::builder_for($table_root).build($engine).unwrap();
-                let commit = latest_version_as_of(
-                    &latest,
-                    $engine,
-                    *ts,
-                    HistoryCommitType::Recreatable,
-                )
-                .unwrap();
+                let commit =
+                    latest_version_as_of(&latest, $engine, *ts, HistoryCommitType::Recreatable)
+                        .unwrap();
                 Snapshot::builder_for($table_root)
                     .at_version(commit.version)
                     .build($engine)

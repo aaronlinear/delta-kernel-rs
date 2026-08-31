@@ -20,6 +20,12 @@ use crate::{
 pub trait PlanExecutor: AsAny {
     /// Executes the given declarative plan and returns the result.
     fn execute_op(&self, op: Operation) -> DeltaResult<PlanResult>;
+
+    /// Reads a parquet file footer through an I/O operation.
+    fn read_parquet_footer(&self, file: FileMeta) -> DeltaResult<ParquetFooter> {
+        self.execute_op(Operation::IoOperation(IoOperation::parquet_footer(file)))?
+            .into_parquet_footer()
+    }
 }
 
 /// The unit type is a trivial [`PlanExecutor`] that rejects every operation. It backs

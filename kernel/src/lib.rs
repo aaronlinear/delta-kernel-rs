@@ -202,6 +202,14 @@ pub mod engine;
 /// Delta table version is 8 byte unsigned int
 pub type Version = u64;
 
+/// Converts a Delta version to i64 for declarative plan scalar values.
+#[cfg(feature = "declarative-plans")]
+pub(crate) fn version_as_i64(version: Version) -> DeltaResult<i64> {
+    version
+        .try_into()
+        .map_err(|_| Error::generic(format!("Delta log version {version} exceeds i64::MAX")))
+}
+
 pub type FileSize = u64;
 pub type FileIndex = u64;
 
@@ -993,6 +1001,19 @@ pub trait Engine: AsAny {
     #[cfg(feature = "declarative-plans")]
     fn plan_executor(&self) -> Arc<dyn PlanExecutor> {
         Arc::new(())
+    }
+
+    /// Returns the configured plan executor, or an unsupported error for the default stub.
+    #[cfg(feature = "declarative-plans")]
+    fn require_plan_executor(&self) -> DeltaResult<Arc<dyn PlanExecutor>> {
+        let executor = self.plan_executor();
+        if executor.clone().any_ref().is::<()>() {
+            Err(Error::unsupported(
+                "this engine does not provide a PlanExecutor",
+            ))
+        } else {
+            Ok(executor)
+        }
     }
 }
 

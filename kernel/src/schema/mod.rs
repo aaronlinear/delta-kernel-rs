@@ -21,7 +21,7 @@ use crate::table_features::{
     validate_and_extract_column_mapping_annotations, validate_column_mapping_id, ColumnMappingMode,
 };
 use crate::transforms::{transform_output_type, SchemaTransform};
-use crate::utils::require;
+use crate::utils::{require, CollectInto};
 use crate::{DeltaResult, Error};
 
 #[cfg(feature = "column-defaults-in-dev")]
@@ -1041,6 +1041,12 @@ impl StructType {
         let mut field = None;
         self.visit_fields_of_path(col, |f| field = Some(f))?;
         field.ok_or_else(|| Error::generic("Empty path"))
+    }
+
+    /// Checks whether this schema contains the field at the given column path.
+    pub fn contains_col(&self, col: impl CollectInto<ColumnName>) -> bool {
+        let col = col.collect_into();
+        self.field_at(&col).is_ok()
     }
 
     /// Visits all fields along the given column path.

@@ -278,6 +278,12 @@ impl<Location: AsUrl> ParsedLogPath<Location> {
         }
     }
 
+    /// Converts this path's Delta version to a signed plan scalar.
+    #[cfg(feature = "declarative-plans")]
+    pub(crate) fn version_as_i64(&self) -> DeltaResult<i64> {
+        crate::version_as_i64(self.version)
+    }
+
     #[internal_api]
     pub(crate) fn is_commit(&self) -> bool {
         matches!(
@@ -300,6 +306,13 @@ impl<Location: AsUrl> ParsedLogPath<Location> {
     #[allow(dead_code)] // currently only used in tests, which don't "count"
     pub(crate) fn is_unknown(&self) -> bool {
         matches!(self.file_type, LogPathFileType::Unknown)
+    }
+
+    /// Whether this log path has a JSON extension.
+    #[internal_api]
+    #[allow(dead_code)]
+    pub(crate) fn is_json(&self) -> bool {
+        self.extension == "json"
     }
 }
 

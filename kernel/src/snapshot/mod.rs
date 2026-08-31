@@ -141,10 +141,7 @@ impl Snapshot {
     /// This **can panic**, to catch an error use try_new()
     #[internal_api]
     #[allow(unused)]
-    pub(crate) fn new(
-        log_segment: LogSegment,
-        table_configuration: TableConfiguration,
-    ) -> Self {
+    pub(crate) fn new(log_segment: LogSegment, table_configuration: TableConfiguration) -> Self {
         Self::try_new(log_segment, table_configuration).expect("Failed to construct a Snapshot")
     }
 
@@ -1158,8 +1155,8 @@ mod tests {
     use crate::committer::FileSystemCommitter;
     use crate::engine::arrow_data::ArrowEngineData;
     use crate::engine::sync::SyncEngine;
-    use crate::last_checkpoint_hint::LastCheckpointHint;
     use crate::history_manager::{latest_version_as_of, HistoryCommitType};
+    use crate::last_checkpoint_hint::LastCheckpointHint;
     use crate::log_segment::LogSegment;
     use crate::log_segment_files::LogSegmentFiles;
     use crate::object_store::memory::InMemory;

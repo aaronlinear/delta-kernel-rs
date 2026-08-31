@@ -368,8 +368,11 @@ impl<E: TaskExecutor> ParquetHandler for DefaultParquetHandler<E> {
 
         let object_writer = ParquetObjectWriter::new(store, path);
         let schema = first_record_batch.schema();
-        let writer =
-            Arc::new(Mutex::new(AsyncArrowWriter::try_new_with_options(object_writer, schema, writer_options())?));
+        let writer = Arc::new(Mutex::new(AsyncArrowWriter::try_new_with_options(
+            object_writer,
+            schema,
+            writer_options(),
+        )?));
 
         let w = writer.clone();
         self.task_executor.block_on(async move {
