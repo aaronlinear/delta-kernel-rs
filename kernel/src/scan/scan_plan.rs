@@ -19,7 +19,7 @@ use crate::expressions::{
     col, column_name, joined_column_expr, lit, ColumnName, Expression as Expr, ExpressionRef,
     Predicate,
 };
-use crate::plans::ir::nodes::{DynamicScan, FileType, ScanFile};
+use crate::plans::ir::nodes::{Agg, DynamicScan, FileType, ScanFile};
 use crate::plans::ir::plan::Plan;
 use crate::scan::log_replay::{PARTITION_VALUES_PARSED_NAME, STATS_PARSED_NAME};
 use crate::schema::{
@@ -43,6 +43,9 @@ const PARTITION_VALUES_PARSED: &str = "partitionValues_parsed";
 // Generated partition pruning predicates reference this to retain removes.
 const IS_ADD: &str = "is_add";
 const VERSION: &str = "version";
+// The winning (maximum) version per file key, produced by the dedup aggregate and matched against
+// each row's `version` on the semi-join probe.
+const WIN_VERSION: &str = "win_version";
 
 impl Scan {
     /// Build the live-add metadata plan from checkpoint and commit actions.
@@ -85,30 +88,40 @@ impl Scan {
             p.filter(Predicate::or(col!("add").is_null(), prune.clone()))
         })?;
 
-        let deduped_commit = commit_actions.aggregate_by([column_name!(FILE_ACTION_KEY)], |a| {
-            // Each group with a non-null FILE_ACTION_KEY contains the adds and removes for a given
-            // file; winning adds pass through unchanged while winning removes produce NULL. Non-
-            // file actions have NULL FILE_ACTION_KEY and map to their own NULL group.
-            a.max_non_null_by(
-                column_name!(ADD_NAME),
-                column_name!(FILE_ACTION_KEY),
-                column_name!(VERSION),
-            )
-        })?;
+        // Late-materialize the dedup. Rather than an arg-max that carries the wide `add` struct
+        // through hash-aggregate state (`max_non_null_by(add, ..., version)`), aggregate only the
+        // winning VERSION per file key, then re-fetch the winning rows with a semi-join. The
+        // aggregate copies one i64 per group; `add` only ever streams through the semi-join probe.
+        let win = commit_actions
+            .clone()
+            .aggregate_by([column_name!(FILE_ACTION_KEY)], |a| {
+                a.aggregate_as(Agg::max(column_name!(VERSION)), WIN_VERSION)
+            })?;
+
+        // Emit the commit rows whose (file_action_key, version) equals the group's winning version.
+        // A winning `remove` (null `add`) still matches its key's max version, and the downstream
+        // `add IS NOT NULL` filter drops it, exactly as the arg-max's filter did.
+        let deduped_commit_rows = commit_actions.semi_join(
+            win.clone(),
+            [column_name!(FILE_ACTION_KEY), column_name!(VERSION)],
+            [column_name!(FILE_ACTION_KEY), column_name!(WIN_VERSION)],
+        )?;
 
         let checkpoint_adds = self
             .checkpoint_arm(shape)?
             .try_fold_with(prune, |p, prune| p.filter(prune.clone()))?;
 
+        // Checkpoint reconciliation needs only the commit key set, so anti-join against `win`
+        // rather than the materialized winners.
         let checkpoint_live_adds = checkpoint_adds
             .anti_join(
-                deduped_commit.clone(),
+                win,
                 [column_name!(FILE_ACTION_KEY)],
                 [column_name!(FILE_ACTION_KEY)],
             )?
             .project(output_expr.clone(), output_schema.clone())?;
 
-        let commit_live_adds = deduped_commit
+        let commit_live_adds = deduped_commit_rows
             .filter(col!("add").is_not_null())?
             .project(output_expr, output_schema)?;
 
@@ -758,7 +771,8 @@ mod tests {
         "scan_json", // commits
         "filter",    // keep file actions
         "project",   // normalize
-        "aggregate", // newest-action-per-key
+        "aggregate", // newest version per key
+        "semi_join", // newest action per key
         "filter",    // live commit adds
         "project",   // extract add
     ];
@@ -936,26 +950,25 @@ mod tests {
             .unwrap()
             .execute_op(PlanOperation::QueryPlan(plan))?
             .into_data()?;
-        let batch = batches
-            .next()
-            .expect("one batch")?
-            .try_into_record_batch()?;
-        assert!(batches.next().is_none());
-        assert_eq!(batch.num_rows(), 1);
-
-        let add = batch
-            .column_by_name(ADD_NAME)
-            .expect("add column")
-            .as_any()
-            .downcast_ref::<StructArray>()
-            .expect("add struct");
-        let paths = add
-            .column_by_name("path")
-            .expect("add.path")
-            .as_any()
-            .downcast_ref::<StringArray>()
-            .expect("path string");
-        assert_eq!(paths.value(0), "b.parquet");
+        let paths = batches.try_fold(Vec::new(), |mut result, batch| {
+            let batch = batch?.try_into_record_batch()?;
+            let row_count = batch.num_rows();
+            let add = batch
+                .column_by_name(ADD_NAME)
+                .expect("add column")
+                .as_any()
+                .downcast_ref::<StructArray>()
+                .expect("add struct");
+            let paths = add
+                .column_by_name("path")
+                .expect("add.path")
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .expect("path string");
+            result.extend((0..row_count).map(|row| paths.value(row).to_string()));
+            Ok::<_, crate::Error>(result)
+        })?;
+        assert_eq!(paths, ["b.parquet"]);
         Ok(())
     }
 
